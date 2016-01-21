@@ -12,3 +12,4 @@ libs/SERVO.lib
 libs/QRE1113.lib
 libs/RN4020.lib
 libs/P02.lib
+libs/ST-LIS3MDL.lib
