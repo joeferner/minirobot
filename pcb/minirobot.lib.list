@@ -1,0 +1,14 @@
+libs/+3.3V.lib
+libs/+5V.lib
+libs/Vcc.lib
+libs/~GNDPWR.lib
+libs/R.lib
+libs/C.lib
+libs/CP.lib
+libs/LED.lib
+libs/MECH.lib
+libs/PWR_FLAG.lib
+libs/SERVO.lib
+libs/QRE1113.lib
+libs/RN4020.lib
+libs/P02.lib
