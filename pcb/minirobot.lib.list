@@ -13,3 +13,8 @@ libs/QRE1113.lib
 libs/RN4020.lib
 libs/P02.lib
 libs/ST-LIS3MDL.lib
+libs/DIODES-AP3211.lib
+libs/DIODESCH.lib
+libs/INDUCTOR.lib
+libs/SPST.lib
+libs/STM32-64PIN.lib

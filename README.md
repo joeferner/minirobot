@@ -15,3 +15,4 @@
 | Line follow right inner | EXTI                            |
 | Compass (ST-LIS3MDL)    | I<sup>2</sup>C (0x1E)           |
 | Bluetooth (RN4020)      | USART TX/RX/CTS/RTS<br>GPIO x 6 |
+| Battery level           | ADC                             |
