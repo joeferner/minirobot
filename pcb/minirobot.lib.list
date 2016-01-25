@@ -17,4 +17,7 @@ libs/DIODES-AP3211.lib
 libs/DIODESCH.lib
 libs/INDUCTOR.lib
 libs/SPST.lib
+libs/SPDT.lib
 libs/STM32-64PIN.lib
+libs/STM32SWDUART.lib
+libs/TCS3472.lib
