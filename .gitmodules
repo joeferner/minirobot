@@ -1,3 +1,6 @@
 [submodule "firmware/libs/utils"]
 	path = firmware/libs/utils
 	url = git@github.com:joeferner/stm32-utils.git
+[submodule "firmware/libs/lis3mdl"]
+	path = firmware/libs/lis3mdl
+	url = git@github.com:joeferner/stm32-st-lis3mdl.git
