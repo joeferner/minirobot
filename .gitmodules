@@ -1,0 +1,3 @@
+[submodule "firmware/libs/utils"]
+	path = firmware/libs/utils
+	url = git@github.com:joeferner/stm32-utils.git
