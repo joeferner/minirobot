@@ -49,7 +49,7 @@ HAL_StatusTypeDef compass_tick() {
     }
     compass_onChange(heading);
   }
-  
+
   return HAL_OK;
 }
 
@@ -72,7 +72,7 @@ HAL_StatusTypeDef _compass_readXYHeading(uint16_t* heading) {
   scaledY = _compass_scale(y, compass.min[LIS3MDL_AXIS_Y], compass.max[LIS3MDL_AXIS_Y]);
 
   *heading = 360 - trig_int16_atan2deg(scaledY, scaledX);
-  DEBUG_OUT("%d, %d, %d, %d, %d, %d, %d, %d, %d\n", x, scaledX, compass.min[LIS3MDL_AXIS_X], compass.max[LIS3MDL_AXIS_X], y, scaledY, compass.min[LIS3MDL_AXIS_Y], compass.max[LIS3MDL_AXIS_Y], *heading);
+  //DEBUG_OUT("%d, %d, %d, %d, %d, %d, %d, %d, %d\n", x, scaledX, compass.min[LIS3MDL_AXIS_X], compass.max[LIS3MDL_AXIS_X], y, scaledY, compass.min[LIS3MDL_AXIS_Y], compass.max[LIS3MDL_AXIS_Y], *heading);
 
   return HAL_OK;
 }

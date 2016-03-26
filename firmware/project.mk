@@ -2,6 +2,7 @@ USER_CFLAGS =
 SRCS = \
 	src/main.c  \
 	src/compass.c  \
+	src/servo.c  \
 	libs/utils/debug.c \
 	libs/utils/syscalls.c \
 	libs/utils/time.c \
