@@ -45,6 +45,33 @@ void onFeeler(Feeler feeler, bool active) {
   );
 }
 
+void onWheelSensor(WheelSensor wheelSensor, bool active) {
+  DEBUG_OUT(
+    "wheelSensor: %s %s\n",
+    wheelSensor == WHEEL_SENSOR_LEFT ? "left" : "right",
+    active ? "on" : "off"
+  );
+}
+
+void onLineSensor(LineSensor lineSensor, bool active) {
+  const char* sensorName = "";
+  switch(lineSensor) {
+    case LINE_SENSOR_LEFT_IN:
+      sensorName = "left in";
+      break;
+    case LINE_SENSOR_LEFT_OUT:
+      sensorName = "left out";
+      break;
+    case LINE_SENSOR_RIGHT_IN:
+      sensorName = "right in";
+      break;
+    case LINE_SENSOR_RIGHT_OUT:
+      sensorName = "right out";
+      break;
+  }
+  DEBUG_OUT("lineSensor: %s %s\n", sensorName, active ? "on" : "off");
+}
+
 void compass_onChange(uint16_t heading) {
   //DEBUG_OUT("heading: %d\n", heading);
 }
