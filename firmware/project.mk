@@ -3,6 +3,7 @@ SRCS = \
 	src/main.c  \
 	src/compass.c  \
 	src/servo.c  \
+	src/gpio.c  \
 	libs/utils/debug.c \
 	libs/utils/syscalls.c \
 	libs/utils/time.c \

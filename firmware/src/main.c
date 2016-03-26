@@ -2,6 +2,7 @@
 #include "platform_config.h"
 #include "compass.h"
 #include "servo.h"
+#include "gpio.h"
 #include <utils/debug.h>
 #include <utils/time.h>
 #include <utils/utils.h>
@@ -24,6 +25,7 @@ void setup() {
 
   assertNonOKHALStatus(compass_setup());
   assertNonOKHALStatus(servo_setup());
+  assertNonOKHALStatus(gpio_setup());
 
   DEBUG_OUT("setup complete\n");
   _printPrompt();
@@ -33,6 +35,18 @@ void loop() {
   debug_tick();
   compass_tick();
   servo_tick();
+}
+
+void onFeeler(Feeler feeler, bool active) {
+  DEBUG_OUT(
+    "feeler: %s %s\n",
+    feeler == FEELER_LEFT ? "left" : "right",
+    active ? "on" : "off"
+  );
+}
+
+void compass_onChange(uint16_t heading) {
+  //DEBUG_OUT("heading: %d\n", heading);
 }
 
 void debug_processLine(const char* line) {
@@ -59,10 +73,6 @@ void debug_processLine(const char* line) {
     }
   }
   _printPrompt();
-}
-
-void compass_onChange(uint16_t heading) {
-  //DEBUG_OUT("heading: %d\n", heading);
 }
 
 void _printPrompt() {
