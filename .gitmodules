@@ -4,3 +4,6 @@
 [submodule "firmware/libs/lis3mdl"]
 	path = firmware/libs/lis3mdl
 	url = git@github.com:joeferner/stm32-st-lis3mdl.git
+[submodule "firmware/libs/tcs3472"]
+	path = firmware/libs/tcs3472
+	url = git@github.com:joeferner/stm32-ams-tcs3472.git

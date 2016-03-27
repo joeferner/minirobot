@@ -1,10 +1,10 @@
 
-#include "gpio.h"
+#include "exti.h"
 
-HAL_StatusTypeDef gpio_setup() {
+HAL_StatusTypeDef exti_setup() {
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-  
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 

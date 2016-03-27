@@ -3,7 +3,8 @@ SRCS = \
 	src/main.c  \
 	src/compass.c  \
 	src/servo.c  \
-	src/gpio.c  \
+	src/exti.c  \
+	src/colorSensor.c  \
 	libs/utils/debug.c \
 	libs/utils/syscalls.c \
 	libs/utils/time.c \
@@ -11,5 +12,6 @@ SRCS = \
 	libs/utils/ringbufferdma.c \
 	libs/utils/utils.c \
 	libs/utils/math.c \
-	libs/lis3mdl/lis3mdl.c
+	libs/lis3mdl/lis3mdl.c \
+	libs/tcs3472/tcs3472.c
 SSRCS =

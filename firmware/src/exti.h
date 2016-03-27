@@ -1,6 +1,6 @@
 
-#ifndef _GPIO_H_
-#define _GPIO_H_
+#ifndef _EXTI_H_
+#define _EXTI_H_
 
 #include <platform_config.h>
 #include <stdbool.h>
@@ -22,7 +22,7 @@ typedef enum {
   LINE_SENSOR_RIGHT_IN
 } LineSensor;
 
-HAL_StatusTypeDef gpio_setup();
+HAL_StatusTypeDef exti_setup();
 
 extern void onFeeler(Feeler feeler, bool active);
 extern void onWheelSensor(WheelSensor wheelSensor, bool active);

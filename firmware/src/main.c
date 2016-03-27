@@ -2,7 +2,8 @@
 #include "platform_config.h"
 #include "compass.h"
 #include "servo.h"
-#include "gpio.h"
+#include "colorSensor.h"
+#include "exti.h"
 #include <utils/debug.h>
 #include <utils/time.h>
 #include <utils/utils.h>
@@ -25,7 +26,8 @@ void setup() {
 
   assertNonOKHALStatus(compass_setup());
   assertNonOKHALStatus(servo_setup());
-  assertNonOKHALStatus(gpio_setup());
+  assertNonOKHALStatus(exti_setup());
+  assertNonOKHALStatus(colorSensor_setup());
 
   DEBUG_OUT("setup complete\n");
   _printPrompt();
@@ -35,6 +37,7 @@ void loop() {
   debug_tick();
   compass_tick();
   servo_tick();
+  colorSensor_tick();
 }
 
 void onFeeler(Feeler feeler, bool active) {
@@ -55,25 +58,29 @@ void onWheelSensor(WheelSensor wheelSensor, bool active) {
 
 void onLineSensor(LineSensor lineSensor, bool active) {
   const char* sensorName = "";
-  switch(lineSensor) {
-    case LINE_SENSOR_LEFT_IN:
-      sensorName = "left in";
-      break;
-    case LINE_SENSOR_LEFT_OUT:
-      sensorName = "left out";
-      break;
-    case LINE_SENSOR_RIGHT_IN:
-      sensorName = "right in";
-      break;
-    case LINE_SENSOR_RIGHT_OUT:
-      sensorName = "right out";
-      break;
+  switch (lineSensor) {
+  case LINE_SENSOR_LEFT_IN:
+    sensorName = "left in";
+    break;
+  case LINE_SENSOR_LEFT_OUT:
+    sensorName = "left out";
+    break;
+  case LINE_SENSOR_RIGHT_IN:
+    sensorName = "right in";
+    break;
+  case LINE_SENSOR_RIGHT_OUT:
+    sensorName = "right out";
+    break;
   }
   DEBUG_OUT("lineSensor: %s %s\n", sensorName, active ? "on" : "off");
 }
 
 void compass_onChange(uint16_t heading) {
   //DEBUG_OUT("heading: %d\n", heading);
+}
+
+void onColorSensorData(ColorSensorData* colorData) {
+  DEBUG_OUT("colorSensor: r,g,b,c=>%d,%d,%d,%d\n", colorData->r, colorData->g, colorData->b, colorData->c);
 }
 
 void debug_processLine(const char* line) {
