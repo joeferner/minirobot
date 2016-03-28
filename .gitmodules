@@ -7,3 +7,6 @@
 [submodule "firmware/libs/tcs3472"]
 	path = firmware/libs/tcs3472
 	url = git@github.com:joeferner/stm32-ams-tcs3472.git
+[submodule "firmware/libs/rn4020"]
+	path = firmware/libs/rn4020
+	url = git@github.com:joeferner/stm32-microchip-rn4020.git

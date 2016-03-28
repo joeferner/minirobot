@@ -20,7 +20,7 @@
 #define SERVO_LEFT_CH    TIM_CHANNEL_1
 #define SERVO_RIGHT_CH   TIM_CHANNEL_2
 
-#define TCS3472_DEBUG
+//#define TCS3472_DEBUG
 #define COLOR_SENSOR_CHANGE_THRESHOLD 10
 #define COLOR_SENSOR_I2C              hi2c1
 #define COLOR_SENSOR_LED_TIMER        htim4
@@ -29,6 +29,14 @@
 #define TCS3472_INTEGRATION_TIMEMS    101
 #define TCS3472_GAIN                  TCS3472_REG_CONTROL_AGAIN_1X
 
+#define RN4020_DEBUG
+#define BLE_UART         huart2
+#define BLE_DEVICE_NAME  "Minirobot"
+
+#define BATTERY_UPDATE_INTERVAL_MS 5000
+#define BATTERY_MAX_VALUE          100
+#define BATTERY_ADC                hadc1
+
 #ifdef DEBUG
 #  define DEBUG_OUT(format, ...) printf("%s:%d: " format, __FILE__, __LINE__, ##__VA_ARGS__)
 #else
@@ -36,8 +44,10 @@
 #endif
 
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern ADC_HandleTypeDef hadc1;
 
 #endif

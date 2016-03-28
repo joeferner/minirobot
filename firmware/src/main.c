@@ -4,6 +4,8 @@
 #include "servo.h"
 #include "colorSensor.h"
 #include "exti.h"
+#include "ble.h"
+#include "battery.h"
 #include <utils/debug.h>
 #include <utils/time.h>
 #include <utils/utils.h>
@@ -11,7 +13,8 @@
 
 typedef enum {
   DEBUG_MODE_NOT_SET,
-  DEBUG_MODE_SERVO
+  DEBUG_MODE_SERVO,
+  DEBUG_MODE_BLE
 } _DebugMode;
 
 void _printPrompt();
@@ -28,6 +31,8 @@ void setup() {
   assertNonOKHALStatus(servo_setup());
   assertNonOKHALStatus(exti_setup());
   assertNonOKHALStatus(colorSensor_setup());
+  assertNonOKHALStatus(ble_setup());
+  assertNonOKHALStatus(battery_setup());
 
   DEBUG_OUT("setup complete\n");
   _printPrompt();
@@ -38,25 +43,37 @@ void loop() {
   compass_tick();
   servo_tick();
   colorSensor_tick();
+  ble_tick();
+  battery_tick();
+}
+
+void onBatteryLevelUpdate(uint8_t level) {
+  DEBUG_OUT("battery level: %d\n", level);
+  ble_updateBatteryLevel(level);
 }
 
 void onFeeler(Feeler feeler, bool active) {
+  /*
   DEBUG_OUT(
     "feeler: %s %s\n",
     feeler == FEELER_LEFT ? "left" : "right",
     active ? "on" : "off"
   );
+  */
 }
 
 void onWheelSensor(WheelSensor wheelSensor, bool active) {
+  /*
   DEBUG_OUT(
     "wheelSensor: %s %s\n",
     wheelSensor == WHEEL_SENSOR_LEFT ? "left" : "right",
     active ? "on" : "off"
   );
+  */
 }
 
 void onLineSensor(LineSensor lineSensor, bool active) {
+  /*
   const char* sensorName = "";
   switch (lineSensor) {
   case LINE_SENSOR_LEFT_IN:
@@ -73,6 +90,7 @@ void onLineSensor(LineSensor lineSensor, bool active) {
     break;
   }
   DEBUG_OUT("lineSensor: %s %s\n", sensorName, active ? "on" : "off");
+  */
 }
 
 void compass_onChange(uint16_t heading) {
@@ -80,7 +98,7 @@ void compass_onChange(uint16_t heading) {
 }
 
 void onColorSensorData(ColorSensorData* colorData) {
-  DEBUG_OUT("colorSensor: r,g,b,c=>%d,%d,%d,%d\n", colorData->r, colorData->g, colorData->b, colorData->c);
+  //DEBUG_OUT("colorSensor: r,g,b,c=>%d,%d,%d,%d\n", colorData->r, colorData->g, colorData->b, colorData->c);
 }
 
 void debug_processLine(const char* line) {
@@ -89,6 +107,8 @@ void debug_processLine(const char* line) {
     _debugMode = DEBUG_MODE_NOT_SET;
   } else if (strcmp(line, "servo") == 0) {
     _debugMode = DEBUG_MODE_SERVO;
+  } else if (strcmp(line, "ble") == 0) {
+    _debugMode = DEBUG_MODE_BLE;
   } else {
     bool result = false;
     switch (_debugMode) {
@@ -96,6 +116,9 @@ void debug_processLine(const char* line) {
       break;
     case DEBUG_MODE_SERVO:
       result = servo_debugProcessLine(line);
+      break;
+    case DEBUG_MODE_BLE:
+      result = ble_debugProcessLine(line);
       break;
     default:
       printf("unhandled debug mode %d\n", _debugMode);
@@ -115,6 +138,9 @@ void _printPrompt() {
     break;
   case DEBUG_MODE_SERVO:
     printf("servo");
+    break;
+  case DEBUG_MODE_BLE:
+    printf("ble");
     break;
   default:
     printf("unknown");
