@@ -9,12 +9,12 @@ HAL_StatusTypeDef ble_setup() {
   DEBUG_OUT("ble setup\n");
 
   uint32_t supportedServices = RN4020_SERVICE_DEVICE_INFORMATION
-    | RN4020_SERVICE_BATTERY
-    | RN4020_SERVICE_USER_DEFINED;
-  uint32_t features = RN4020_FEATURE_AUTO_MLDP_DISABLE 
-    | RN4020_FEATURE_DO_NOT_SAVE_BONDING
-    | RN4020_FEATURE_ENABLE_OTA;
-  
+                               | RN4020_SERVICE_BATTERY
+                               | RN4020_SERVICE_USER_DEFINED;
+  uint32_t features = RN4020_FEATURE_AUTO_MLDP_DISABLE
+                      | RN4020_FEATURE_DO_NOT_SAVE_BONDING
+                      | RN4020_FEATURE_ENABLE_OTA;
+
   rn4020.uart = &BLE_UART;
   rn4020.wakeswPort = BLE_WAKESW_PORT;
   rn4020.wakeswPin = BLE_WAKESW_PIN;
@@ -27,7 +27,7 @@ HAL_StatusTypeDef ble_setup() {
   returnNonOKHALStatus(RN4020_setDeviceNameWithMAC(&rn4020, BLE_DEVICE_NAME));
   returnNonOKHALStatus(RN4020_reset(&rn4020));
   returnNonOKHALStatus(RN4020_advertise(&rn4020));
-  
+
   return HAL_OK;
 }
 

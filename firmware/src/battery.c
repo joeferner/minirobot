@@ -26,7 +26,7 @@ void _battery_update() {
   HAL_StatusTypeDef ret = HAL_ADC_PollForConversion(&BATTERY_ADC, 100);
   if (ret != HAL_OK) {
     DEBUG_OUT("failed to poll for battery level\n");
-    _battery_startConversion();  
+    _battery_startConversion();
     return;
   }
   uint32_t value = clamp(HAL_ADC_GetValue(&BATTERY_ADC) * BATTERY_MAX_VALUE / ADC_MAX_VALUE, 0, BATTERY_MAX_VALUE);
