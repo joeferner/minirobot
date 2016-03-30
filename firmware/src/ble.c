@@ -44,3 +44,20 @@ void ble_updateBatteryLevel(uint8_t batteryLevel) {
   uint8_t scaledBatteryLevel = clamp((uint32_t)batteryLevel * RN4020_BATTERY_MAX_LEVEL / BATTERY_MAX_VALUE, 0, RN4020_BATTERY_MAX_LEVEL);
   RN4020_battery_setLevel(&rn4020, scaledBatteryLevel);
 }
+
+void RN4020_connectedStateChanged(RN4020* rn4020, bool connected) {
+  DEBUG_OUT("%s\n", connected ? "connected" : "disconnected");
+  if (!connected) {
+    HAL_StatusTypeDef ret;
+    ret = RN4020_removeBond(rn4020);
+    if(ret != HAL_OK) {
+      DEBUG_OUT("could not remove bond after disconnect %d\n", ret);
+    }
+    
+    ret = RN4020_advertise(rn4020);
+    if(ret != HAL_OK) {
+      DEBUG_OUT("could not advertise after disconnect %d\n", ret);
+      return;
+    }
+  }
+}

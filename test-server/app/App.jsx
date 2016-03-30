@@ -1,8 +1,8 @@
 import React from 'react';
-import styles from './App.css';
 import Es6Promise from 'es6-promise';
 import qwest from 'qwest';
 import PeripheralsList from './PeripheralsList.jsx';
+import ConnectedPeripheral from './ConnectedPeripheral.jsx';
 const socket = io();
 qwest.setDefaultDataType('json');
 
@@ -62,13 +62,7 @@ export default class App extends React.Component {
       var selectedPeripheral = this.state.peripherals[this.state.selectedPeripheralId];
       return (
         <div>
-          <button onClick={this.handleDisconnect.bind(this)}>Disconnect</button>
-        
-          <div className={styles.label}>ID</div>
-          <div>{selectedPeripheral.id}</div>
-          
-          <div className={styles.label}>Name</div>
-          <div>{selectedPeripheral.name}</div>
+          <ConnectedPeripheral onDisconnectClick={this.handleDisconnect.bind(this)} peripheral={selectedPeripheral} />
         </div>
       );
     } else {

@@ -76,7 +76,7 @@ app.post('/ble/disconnect', function(req, res, next) {
     return res.status(404).send({ message: 'Could not find peripheral with id ' + peripheralId });
   }
 
-  peripheral.disconnect(function(err) {
+  ble.disconnectPeripheral(peripheralId, function(err) {
     if (err) {
       return next(err);
     }

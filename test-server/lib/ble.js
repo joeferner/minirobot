@@ -2,10 +2,12 @@ import EventEmitter from 'events';
 import noble from 'noble';
 import BlePeripheral from './blePeripheral';
 
+const TEST_ID = '_test_';
+
 export default class Ble extends EventEmitter {
   constructor() {
     super();
-    this._peripherals = {};
+    this._peripherals = process.env.TEST ? {'_test_': {id: TEST_ID, advertisement: {localName: 'test'}}} : {};
     this._connectedPeripherals = {};
     
     noble.on('stateChange', (state) => {
@@ -39,6 +41,11 @@ export default class Ble extends EventEmitter {
   
   connectToPeripheral(id, callback) {
     var peripheral = this.getPeripheral(id);
+    if (process.env.TEST && id === TEST_ID) {
+      var blePeripheral = new BlePeripheral(peripheral, [], []);
+      this._connectedPeripherals[peripheral.id] = blePeripheral;
+      return callback(null, blePeripheral);
+    }
     
     peripheral.connect((err) => {
       if (err) {
@@ -58,5 +65,16 @@ export default class Ble extends EventEmitter {
         return callback(null, blePeripheral);
       });
     });
+  }
+
+  disconnectPeripheral(id, callback) {
+    var peripheral = this.getPeripheral(id);
+    if (process.env.TEST && id === TEST_ID) {
+      delete this._connectedPeripherals[peripheral.id];
+      this.emit('disconnect', peripheral.id);
+      return callback();
+    }
+
+    return peripheral.disconnect(callback);
   }
 }

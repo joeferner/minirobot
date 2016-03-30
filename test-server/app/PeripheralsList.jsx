@@ -9,9 +9,8 @@ export default class PeripheralsList extends React.Component {
   _mapPeripherals(callback) {
     return Object.keys(this.props.peripherals).map((key) => {
       var peripheral = this.props.peripherals[key];
-      if (peripheral.name) {
-        return callback(key, peripheral);
-      }
+      peripheral.name = peripheral.name || 'not set';
+      return callback(key, peripheral);
     });
   }
 
