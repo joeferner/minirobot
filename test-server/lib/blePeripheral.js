@@ -11,15 +11,24 @@ export default class BlePeripheral extends EventEmitter {
       return;
     }
 
-    this._peripheral.on('disconnect', () => {
-      this.emit('disconnect');
-    });
+    this._disconnectListener = this._handleDisconnect.bind(this);
+    this._peripheral.on('disconnect', this._disconnectListener);
     characteristics.forEach((characteristic) => {
       if (characteristic.uuid === CHARACTERISTIC_UUID_BATTERY_LEVEL) {
         this._batteryLevelCharacteristic = characteristic;      
       }
     });
     console.log(peripheral, services, characteristics);
+  }
+
+  _handleDisconnect() {
+    this.emit('disconnect');
+  }
+
+  unsubscribeFromEvents() {
+    if (this._disconnectListener) {
+      this._peripheral.removeListener('disconnect', this._disconnectListener);
+    }
   }
   
   getBatteryLevel(callback) {

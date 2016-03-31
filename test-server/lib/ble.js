@@ -59,6 +59,7 @@ export default class Ble extends EventEmitter {
         var blePeripheral = new BlePeripheral(peripheral, services, characteristics);
         this._connectedPeripherals[peripheral.id] = blePeripheral;
         blePeripheral.on('disconnect', () => {
+          this._connectedPeripherals[peripheral.id].unsubscribeFromEvents();
           delete this._connectedPeripherals[peripheral.id];
           this.emit('disconnect', peripheral.id);
         });
@@ -70,6 +71,7 @@ export default class Ble extends EventEmitter {
   disconnectPeripheral(id, callback) {
     var peripheral = this.getPeripheral(id);
     if (process.env.TEST && id === TEST_ID) {
+      this._connectedPeripherals[peripheral.id].unsubscribeFromEvents();
       delete this._connectedPeripherals[peripheral.id];
       this.emit('disconnect', peripheral.id);
       return callback();
