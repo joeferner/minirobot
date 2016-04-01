@@ -1,4 +1,30 @@
 
 .label {
 	font-weight: bold;
+	margin-top: 10px;
+}
+
+.color-swatch {
+	display: block;
+	width: 100px;
+	height: 100px;
+	border: 1px solid #8a8a8a;
+}
+
+.compass {
+	display: block;
+	width: 100px;
+	height: 100px;
+}
+
+.connected-peripheral {
+}
+
+.connected-peripheral .column {
+	float: left;
+	width: 150px;
+}
+
+.connected-peripheral .actions {
+	margin-top: 20px;
 }

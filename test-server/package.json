@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "babel-cli": "^6.4.0",
+    "babel-node-debug": "^2.0.0",
     "body-parser": "^1.15.0",
     "es6-promise": "^3.1.2",
     "isomorphic-fetch": "^2.2.1",
@@ -16,6 +17,7 @@
     "qwest": "^4.3.2",
     "react": "^0.14.3",
     "react-dom": "^0.14.3",
+    "react-router": "^2.0.1",
     "socket.io": "^1.4.5"
   },
   "devDependencies": {

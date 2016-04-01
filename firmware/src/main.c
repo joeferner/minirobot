@@ -48,7 +48,7 @@ void loop() {
 }
 
 void onBatteryLevelUpdate(uint8_t level) {
-  DEBUG_OUT("battery level: %d\n", level);
+  //DEBUG_OUT("battery level: %d\n", level);
   ble_updateBatteryLevel(level);
 }
 

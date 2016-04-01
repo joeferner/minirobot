@@ -1,17 +1,37 @@
 import React from 'react';
-import Peripheral from './Peripheral.jsx';
+import qwest from "qwest";
+import {Link} from "react-router";
 
 export default class PeripheralsList extends React.Component {
-  handlePeripheralClick(id) {
-    this.props.onPeripheralClick(id);
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      peripherals: []
+    }
   }
-  
+
+  componentDidMount() {
+    qwest.get('/ble/peripherals')
+        .then((xhr, peripherals) => {
+          this.setState({'peripherals': peripherals});
+        });
+  }
+
   _mapPeripherals(callback) {
-    return Object.keys(this.props.peripherals).map((key) => {
-      var peripheral = this.props.peripherals[key];
+    return Object.keys(this.state.peripherals).map((key) => {
+      var peripheral = this.state.peripherals[key];
       peripheral.name = peripheral.name || 'not set';
       return callback(key, peripheral);
     });
+  }
+
+  renderPeripheral(key, peripheral) {
+    return (
+        <li key={key}>
+          <Link to={`peripheral/${peripheral.id}`}>{peripheral.name}</Link>
+        </li>
+    );
   }
 
   render() {
@@ -19,7 +39,7 @@ export default class PeripheralsList extends React.Component {
       <ul>
         { 
           this._mapPeripherals((key, peripheral) => {
-            return (<Peripheral onClick={this.handlePeripheralClick.bind(this, peripheral.id)} key={peripheral.id} peripheral={peripheral} />)
+            return this.renderPeripheral(key, peripheral);
           })
         }
       </ul>
