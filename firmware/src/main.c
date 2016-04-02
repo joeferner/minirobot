@@ -60,6 +60,7 @@ void onFeeler(Feeler feeler, bool active) {
     active ? "on" : "off"
   );
   */
+  ble_updateFeeler(feeler, active);
 }
 
 void onWheelSensor(WheelSensor wheelSensor, bool active) {
@@ -91,14 +92,17 @@ void onLineSensor(LineSensor lineSensor, bool active) {
   }
   DEBUG_OUT("lineSensor: %s %s\n", sensorName, active ? "on" : "off");
   */
+  ble_updateLineSensor(lineSensor, active);
 }
 
 void compass_onChange(uint16_t heading) {
   //DEBUG_OUT("heading: %d\n", heading);
+  ble_updateCompass(heading);
 }
 
 void onColorSensorData(ColorSensorData* colorData) {
   //DEBUG_OUT("colorSensor: r,g,b,c=>%d,%d,%d,%d\n", colorData->r, colorData->g, colorData->b, colorData->c);
+  ble_updateColorSensorData(colorData);
 }
 
 void debug_processLine(const char* line) {

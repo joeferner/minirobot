@@ -2,12 +2,14 @@
 #include "ble.h"
 #include <rn4020/rn4020.h>
 #include <utils/utils.h>
+#include <string.h>
+#include <version.h>
 
 const uint8_t BLE_MINIROBOT_SERVICE_UUID[] = {0x5a, 0x6c, 0x53, 0xb8, 0x47, 0x0d, 0x46, 0x7d, 0x95, 0x31, 0xf5, 0x3d, 0xe5, 0xf3, 0x1e, 0x21};
 const uint8_t BLE_MINIROBOT_CHARACTERISTIC_MOTORS_UUID[] = {0xb5, 0xfb, 0x41, 0xdc, 0x8f, 0x5d, 0x4e, 0xc4, 0xb3, 0x23, 0xc9, 0xd1, 0xbd, 0x2b, 0x33, 0x08};
 const uint8_t BLE_MINIROBOT_CHARACTERISTIC_SENSORS_UUID[] = {0xd8, 0xe7, 0x74, 0x6c, 0xe8, 0xd6, 0x47, 0x3a, 0xa1, 0x57, 0x26, 0x58, 0x88, 0xa3, 0xb1, 0x53};
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t lineLeftOuter: 1;
   uint8_t lineLeftInner: 1;
   uint8_t lineRightOuter: 1;
@@ -21,7 +23,7 @@ typedef struct {
   uint8_t colorClear;
 } BLE_SensorData;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   int8_t left;
   int8_t right;
 } BLE_MotorData;
@@ -91,6 +93,45 @@ void ble_updateBatteryLevel(uint8_t batteryLevel) {
   _ble_batteryLevel = clamp((uint32_t)batteryLevel * RN4020_BATTERY_MAX_LEVEL / BATTERY_MAX_VALUE, 0, RN4020_BATTERY_MAX_LEVEL);
 }
 
+void ble_updateFeeler(Feeler feeler, bool active) {
+  switch(feeler) {
+    case FEELER_LEFT:
+      _ble_sensorData.feelerLeft = active ? 1 : 0;
+      break;
+    case FEELER_RIGHT:
+      _ble_sensorData.feelerRight = active ? 1 : 0;
+      break;
+  }
+}
+
+void ble_updateLineSensor(LineSensor lineSensor, bool active) {
+  switch(lineSensor) {
+      case LINE_SENSOR_LEFT_OUT:
+	_ble_sensorData.lineLeftOuter = active ? 1 : 0;
+	break;
+      case LINE_SENSOR_LEFT_IN:
+	_ble_sensorData.lineLeftInner = active ? 1 : 0;
+	break;
+      case LINE_SENSOR_RIGHT_OUT:
+	_ble_sensorData.lineRightOuter = active ? 1 : 0;
+	break;
+      case LINE_SENSOR_RIGHT_IN:
+	_ble_sensorData.lineRightInner = active ? 1 : 0;
+	break;
+  }
+}
+
+void ble_updateCompass(uint16_t heading) {
+  _ble_sensorData.compass = heading;
+}
+  
+void ble_updateColorSensorData(ColorSensorData* colorData) {
+  _ble_sensorData.colorRed = colorData->r;
+  _ble_sensorData.colorGreen = colorData->g;
+  _ble_sensorData.colorBlue = colorData->b;
+  _ble_sensorData.colorClear = colorData->c;
+}
+  
 void RN4020_onRealTimeRead(RN4020* rn4020, uint16_t characteristicHandle) {
   RN4020_handleLookupItem* handleLookupItem = RN4020_lookupHandle(rn4020, characteristicHandle);
   if (handleLookupItem == NULL) {
@@ -102,13 +143,48 @@ void RN4020_onRealTimeRead(RN4020* rn4020, uint16_t characteristicHandle) {
     return;
   }
 
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_MANUFACTURER_NAME)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_MANUFACTURER_NAME, strlen(BLE_MANUFACTURER_NAME));
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_MODEL_NUMBER)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_MODEL_NUMBER, strlen(BLE_MODEL_NUMBER));
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_SERIAL_NUMBER)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_SERIAL_NUMBER, strlen(BLE_SERIAL_NUMBER));
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_HARDWARE_REVISION)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_HARDWARE_REVISION, strlen(BLE_HARDWARE_REVISION));
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_FIRMWARE_REVISION)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)GIT_HASH, 20);
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_SOFTWARE_REVISION)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_SOFTWARE_REVISION, strlen(BLE_SOFTWARE_REVISION));
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual16(handleLookupItem, RN4020_DEV_INFO_SYSTEM_ID)) {
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)BLE_SYSTEM_ID, strlen(BLE_SYSTEM_ID));
+    return;
+  }
+
   if (RN4020_isHandleLookupItemUUIDEqual128(handleLookupItem, BLE_MINIROBOT_CHARACTERISTIC_SENSORS_UUID)) {
-    RN4020_writeServerPrivateCharacteristic(rn4020, BLE_MINIROBOT_CHARACTERISTIC_SENSORS_UUID, (const uint8_t*)&_ble_sensorData, sizeof(_ble_sensorData));
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)&_ble_sensorData, sizeof(_ble_sensorData));
     return;
   }
 
   if (RN4020_isHandleLookupItemUUIDEqual128(handleLookupItem, BLE_MINIROBOT_CHARACTERISTIC_MOTORS_UUID)) {
-    RN4020_writeServerPrivateCharacteristic(rn4020, BLE_MINIROBOT_CHARACTERISTIC_MOTORS_UUID, (const uint8_t*)&_ble_motorData, sizeof(_ble_motorData));
+    RN4020_writeServerCharacteristicHandle(rn4020, handleLookupItem->handle, (const uint8_t*)&_ble_motorData, sizeof(_ble_motorData));
     return;
   }
 

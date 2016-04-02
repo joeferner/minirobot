@@ -30,8 +30,14 @@
 #define TCS3472_GAIN                  TCS3472_REG_CONTROL_AGAIN_1X
 
 #define RN4020_DEBUG
-#define BLE_UART         huart2
-#define BLE_DEVICE_NAME  "Minirobot"
+#define BLE_UART              huart2
+#define BLE_DEVICE_NAME       "Minirobot"
+#define BLE_MANUFACTURER_NAME "joeferner"
+#define BLE_MODEL_NUMBER      "1.0"
+#define BLE_SERIAL_NUMBER     "000001"
+#define BLE_HARDWARE_REVISION "2016-02-23"
+#define BLE_SOFTWARE_REVISION "1.0"
+#define BLE_SYSTEM_ID         BLE_DEVICE_NAME
 
 #define BATTERY_UPDATE_INTERVAL_MS 5000
 #define BATTERY_MAX_VALUE          100

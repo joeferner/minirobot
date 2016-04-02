@@ -1,6 +1,8 @@
 import EventEmitter from "events";
+import Locks from "locks";
 
 const CHARACTERISTIC_UUID_BATTERY_LEVEL = '2a19';
+const SERVICE_UUID = '5a6c53b8470d467d9531f53de5f31e21';
 const CHARACTERISTIC_UUID_MOTORS = 'b5fb41dc8f5d4ec4b323c9d1bd2b3308';
 const CHARACTERISTIC_UUID_SENSORS = 'd8e7746ce8d6473aa157265888a3b153';
 
@@ -22,6 +24,7 @@ function scaleMotorValue(value) {
 export default class BlePeripheral extends EventEmitter {
     constructor(peripheral, services, characteristics) {
         super();
+        this._lock = Locks.createMutex();
         this._peripheral = peripheral;
         if (process.env.TEST) {
             this._testBatteryLevel = 0;
@@ -136,7 +139,7 @@ export default class BlePeripheral extends EventEmitter {
             console.log('motor characteristic', data);
             var motorData = {
                 left: data.readInt8(0),
-                right: data.readInt8(0)
+                right: data.readInt8(1)
             };
             return callback(null, sensorData);
         });
@@ -158,10 +161,26 @@ export default class BlePeripheral extends EventEmitter {
     }
 
     _readCharacteristic(characteristic, callback) {
-        return characteristic.read(callback);
+        console.log('_readCharacteristic waiting for lock:', characteristic.uuid);
+        this._lock.timedLock(1000, () => {
+            console.log('_readCharacteristic:', characteristic.uuid);
+            return characteristic.read((err, data) => {
+                this._lock.unlock();
+                console.log('_readCharacteristic release:', characteristic.uuid);
+                return callback(err, data);
+            });
+        });
     }
 
     _writeCharacteristic(characteristic, data, callback) {
-        characteristic.write(data, false, callback);
+        console.log('_writeCharacteristic waiting for lock:', characteristic.uuid);
+        this._lock.timedLock(1000, () => {
+            console.log('_writeCharacteristic:', characteristic.uuid);
+            return characteristic.write(data, false, (err, data) => {
+                this._lock.unlock();
+                console.log('_writeCharacteristic release:', characteristic.uuid);
+                return callback(err, data);
+            });
+        });
     }
 }

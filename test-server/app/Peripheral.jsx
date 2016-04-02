@@ -48,7 +48,7 @@ export default class ConnectedPeripheral extends React.Component {
                 this.peripheral = peripheral;
                 this.refreshBattery();
                 this.refreshSensors();
-                this.refreshMotor();
+                //this.refreshMotor();
             });
     }
 

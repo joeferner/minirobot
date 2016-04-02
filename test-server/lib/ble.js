@@ -53,15 +53,18 @@ export default class Ble extends EventEmitter {
             return callback(null, blePeripheral);
         }
 
+        console.log('connection to ' + peripheral.id);
         peripheral.connect((err) => {
             if (err) {
                 return callback(err);
             }
+            console.log('discoverAllServicesAndCharacteristics for ' + peripheral.id);
             peripheral.discoverAllServicesAndCharacteristics((err, services, characteristics) => {
                 if (err) {
                     peripheral.disonnect();
                     return callback(err);
                 }
+                console.log('creating BlePeripheral for ' + peripheral.id);
                 var blePeripheral = new BlePeripheral(peripheral, services, characteristics);
                 blePeripheral.once('disconnect', (peripheralId) => {
                     delete this._connectedPeripherals[peripheralId];
