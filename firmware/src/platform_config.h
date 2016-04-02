@@ -27,7 +27,6 @@
 #define COLOR_SENSOR_LED_TIMER_CH     TIM_CHANNEL_2
 #define TCS3472_INTEGRATION_TIME      0xd5 /* 101ms */
 #define TCS3472_INTEGRATION_TIMEMS    101
-#define TCS3472_GAIN                  TCS3472_REG_CONTROL_AGAIN_1X
 
 #define RN4020_DEBUG
 #define BLE_UART              huart2

@@ -3,6 +3,7 @@ import Locks from "locks";
 
 const CHARACTERISTIC_UUID_BATTERY_LEVEL = '2a19';
 const SERVICE_UUID = '5a6c53b8470d467d9531f53de5f31e21';
+const CHARACTERISTIC_UUID_CONFIGURATION = '82552f9e365049aba0129338954accbc';
 const CHARACTERISTIC_UUID_MOTORS = 'b5fb41dc8f5d4ec4b323c9d1bd2b3308';
 const CHARACTERISTIC_UUID_SENSORS = 'd8e7746ce8d6473aa157265888a3b153';
 
@@ -19,6 +20,16 @@ function clamp(value, min, max) {
 function scaleMotorValue(value) {
     value = clamp(value, -100.0, 100.0);
     return value;
+}
+
+function isValidColorSensorGain(gain) {
+    return !!(gain == 1 || gain == 4 || gain == 16 || gain == 60);
+
+}
+
+function isValidColorSensorLedBrightness(brightness) {
+    return !!(brightness >= 0 && brightness <= 100);
+
 }
 
 export default class BlePeripheral extends EventEmitter {
@@ -42,6 +53,8 @@ export default class BlePeripheral extends EventEmitter {
                 this._motorsCharacteristic = characteristic;
             } else if (characteristic.uuid === CHARACTERISTIC_UUID_SENSORS) {
                 this._sensorsCharacteristic = characteristic;
+            } else if (characteristic.uuid === CHARACTERISTIC_UUID_CONFIGURATION) {
+                this._configurationCharacteristic = characteristic;
             }
         });
         console.log(peripheral, services, characteristics);
@@ -111,10 +124,10 @@ export default class BlePeripheral extends EventEmitter {
                 feelerRight: (firstByte & 0x20) ? true : false,
                 compass: data.readUInt16LE(1),
                 color: {
-                    red: data.readUInt8(3),
-                    green: data.readUInt8(4),
-                    blue: data.readUInt8(5),
-                    clear: data.readUInt8(6)
+                    red: data.readUInt16LE(3),
+                    green: data.readUInt16LE(5),
+                    blue: data.readUInt16LE(7),
+                    clear: data.readUInt16LE(9)
                 }
             };
             return callback(null, sensorData);
@@ -143,6 +156,52 @@ export default class BlePeripheral extends EventEmitter {
             };
             return callback(null, motorData);
         });
+    }
+
+    getConfiguration(callback) {
+        if (process.env.TEST) {
+            return callback(null, {
+                colorSensorGain: 1,
+                colorSensorLedBrightness: 50
+            });
+        }
+
+        if (!this._configurationCharacteristic) {
+            return callback(new Error('Could not configuration characteristic'));
+        }
+        this._readCharacteristic(this._configurationCharacteristic, (err, data) => {
+            if (err) {
+                return callback(err);
+            }
+            console.log('configuration characteristic', data);
+            var configuration = {
+                colorSensorGain: data.readUInt8(0),
+                colorSensorLedBrightness: data.readUInt8(1)
+            };
+            return callback(null, configuration);
+        });
+    }
+
+    setConfiguration(configuration, callback) {
+        if (!isValidColorSensorGain(configuration.colorSensorGain)) {
+            return callback(new Error('Invalid color sensor gain: ' + configuration.colorSensorGain));
+        }
+        if (!isValidColorSensorLedBrightness(configuration.colorSensorLedBrightness)) {
+            return callback(new Error('Invalid color sensor brightness: ' + configuration.colorSensorLedBrightness));
+        }
+
+        if (process.env.TEST) {
+            console.log('set configuration:', configuration);
+            return callback();
+        }
+
+        if (!this._configurationCharacteristic) {
+            return callback(new Error('Could not find configuration characteristic'));
+        }
+        var data = new Buffer(2);
+        data.writeUInt8(configuration.colorSensorGain, 0);
+        data.writeUInt8(configuration.colorSensorLedBrightness, 1);
+        this._writeCharacteristic(this._configurationCharacteristic, data, callback);
     }
 
     setMotor(left, right, callback) {

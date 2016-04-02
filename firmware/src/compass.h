@@ -7,6 +7,6 @@
 HAL_StatusTypeDef compass_setup();
 HAL_StatusTypeDef compass_tick();
 
-extern void compass_onChange(uint16_t heading);
+extern void onCompassChange(uint16_t heading);
 
 #endif

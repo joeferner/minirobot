@@ -34,6 +34,12 @@ void setup() {
   assertNonOKHALStatus(ble_setup());
   assertNonOKHALStatus(battery_setup());
 
+  colorSensor_setGain(1);
+  ble_updateColorSensorGain(1);
+  
+  colorSensor_setLedBrightness(50);
+  ble_updateColorSensorLedBrightness(50);
+  
   DEBUG_OUT("setup complete\n");
   _printPrompt();
 }
@@ -100,7 +106,12 @@ void onBLESetMotor(int8_t left, int8_t right) {
   servo_setSpeed(left, right);
 }
 
-void compass_onChange(uint16_t heading) {
+void onBLEWriteConfiguration(BLE_Configuration* configuration) {
+  colorSensor_setGain(configuration->colorSensorGain);
+  colorSensor_setLedBrightness(configuration->colorSensorLedBrightness);
+}
+
+void onCompassChange(uint16_t heading) {
   //DEBUG_OUT("heading: %d\n", heading);
   ble_updateCompass(heading);
 }

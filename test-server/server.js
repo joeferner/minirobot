@@ -175,6 +175,44 @@ app.post('/ble/:peripheralId/set-motors', function (req, res, next) {
     });
 });
 
+app.get('/ble/:peripheralId/get-configuration', function (req, res, next) {
+    var peripheralId = req.params.peripheralId;
+    if (!peripheralId) {
+        return next(new Error('peripheralId is required'));
+    }
+    var peripheral = ble.getConnectedPeripheral(peripheralId);
+    if (!peripheral) {
+        return res.status(404).send({message: 'Could not find connected peripheral with id ' + peripheralId});
+    }
+    peripheral.getConfiguration((err, configuration) => {
+        if (err) {
+            return next(err);
+        }
+        //console.log('got configuration data:', configuration);
+        res.send(configuration);
+    });
+});
+
+app.post('/ble/:peripheralId/set-configuration', function (req, res, next) {
+    var peripheralId = req.params.peripheralId;
+    if (!peripheralId) {
+        return next(new Error('peripheralId is required'));
+    }
+    var peripheral = ble.getConnectedPeripheral(peripheralId);
+    if (!peripheral) {
+        return res.status(404).send({message: 'Could not find connected peripheral with id ' + peripheralId});
+    }
+
+    console.log('setting configuration data:', req.body);
+    peripheral.setConfiguration(req.body, (err) => {
+        if (err) {
+            return next(err);
+        }
+        //console.log('set configuration data');
+        res.send({});
+    });
+});
+
 app.use(webpackHotMiddleware(compiler));
 
 server.listen(port, '0.0.0.0', function onStart(err) {

@@ -47,7 +47,7 @@ HAL_StatusTypeDef compass_tick() {
       DEBUG_OUT("could not read XY heading: %d\n", s);
       return s;
     }
-    compass_onChange(heading);
+    onCompassChange(heading);
   }
 
   return HAL_OK;

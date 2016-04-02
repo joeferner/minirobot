@@ -19,6 +19,11 @@ HAL_StatusTypeDef colorSensor_tick();
  */
 HAL_StatusTypeDef colorSensor_setLedBrightness(uint8_t brightness);
 
+/**
+ * gain: 1, 4, 16, 60
+ */
+HAL_StatusTypeDef colorSensor_setGain(uint8_t gain);
+
 extern void onColorSensorData(ColorSensorData* colorData);
 
 #endif

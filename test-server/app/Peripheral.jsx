@@ -5,13 +5,15 @@ import qwest from "qwest";
 const BATTERY_REFRESH_INTERVAL = 3000;
 const SENSORS_REFRESH_INTERVAL = 1000;
 
+function scaleSensorColorTo256(color, clear) {
+    return parseInt((color / clear) * 256);
+}
+
 export default class ConnectedPeripheral extends React.Component {
     constructor(props) {
         super(props);
 
-        this.peripheral = {
-
-        };
+        this.peripheral = {};
 
         this.state = {
             batteryLevel: 'unknown',
@@ -32,8 +34,12 @@ export default class ConnectedPeripheral extends React.Component {
                 }
             },
             motor: {
-                left: 0,
-                right: 0
+                left: 'unknown',
+                right: 'unknown'
+            },
+            configuration: {
+                colorSensorGain: 'unknown',
+                colorSensorLedBrightness: 'unknown'
             }
         };
     }
@@ -42,13 +48,14 @@ export default class ConnectedPeripheral extends React.Component {
         this._socketioMessageEventListener = this.onWebSocketMessage.bind(this);
         document.addEventListener('socketio.message', this._socketioMessageEventListener);
 
-        qwest.post('/ble/connect', { peripheralId: this.props.params.peripheralId })
+        qwest.post('/ble/connect', {peripheralId: this.props.params.peripheralId})
             .then((xhr, peripheral) => {
                 console.log('connected', peripheral);
                 this.peripheral = peripheral;
                 this.refreshBattery();
                 this.refreshSensors();
                 this.refreshMotor();
+                this.refreshConfiguration();
             });
     }
 
@@ -68,7 +75,7 @@ export default class ConnectedPeripheral extends React.Component {
     refreshBattery() {
         qwest.get('/ble/' + this.props.params.peripheralId + '/batteryLevel')
             .then((xhr, data) => {
-                this.setState({'batteryLevel': data.batteryLevel});
+                this.setState({batteryLevel: data.batteryLevel});
                 this._refreshBatteryTimeout = setTimeout(this.refreshBattery.bind(this), BATTERY_REFRESH_INTERVAL);
             });
     }
@@ -76,15 +83,25 @@ export default class ConnectedPeripheral extends React.Component {
     refreshMotor() {
         qwest.get('/ble/' + this.props.params.peripheralId + '/get-motors')
             .then((xhr, data) => {
-                this.setState({'motor': data});
+                this.setState({motor: data});
+            });
+    }
+
+    refreshConfiguration() {
+        qwest.get('/ble/' + this.props.params.peripheralId + '/get-configuration')
+            .then((xhr, data) => {
+                this.setState({configuration: data});
             });
     }
 
     refreshSensors() {
         qwest.get('/ble/' + this.props.params.peripheralId + '/sensors')
             .then((xhr, data) => {
+                var red = scaleSensorColorTo256(data.color.red, data.color.clear);
+                var green = scaleSensorColorTo256(data.color.green, data.color.clear);
+                var blue = scaleSensorColorTo256(data.color.blue, data.color.clear);
                 data.colorSwatchStyle = {
-                    backgroundColor: 'rgb(' + data.color.red + ',' + data.color.green + ',' + data.color.blue + ')'
+                    backgroundColor: 'rgb(' + red + ',' + green + ',' + blue + ')'
                 };
                 data.compassRadians = (data.compass - 90) * (3.1415 / 180.0);
                 this.setState({'sensorData': data});
@@ -99,8 +116,15 @@ export default class ConnectedPeripheral extends React.Component {
             });
     }
 
+    onConfigurationSet() {
+        qwest.post('/ble/' + this.props.params.peripheralId + '/set-configuration', this.state.configuration)
+            .then((xhr, data) => {
+
+            });
+    }
+
     handleMotorLeftChange(event) {
-        var leftValue = event.target.value;
+        var leftValue = parseInt(event.target.value);
         this.setState({
             motor: {
                 left: leftValue,
@@ -110,7 +134,7 @@ export default class ConnectedPeripheral extends React.Component {
     }
 
     handleMotorRightChange(event) {
-        var rightValue = event.target.value;
+        var rightValue = parseInt(event.target.value);
         this.setState({
             motor: {
                 left: this.state.motor.left,
@@ -119,8 +143,28 @@ export default class ConnectedPeripheral extends React.Component {
         });
     }
 
+    handleColorSensorGainChange(event) {
+        var gain = parseInt(event.target.value);
+        this.setState({
+            configuration: {
+                colorSensorGain: gain,
+                colorSensorLedBrightness: this.state.configuration.colorSensorLedBrightness
+            }
+        });
+    }
+
+    handleColorSensorLedBrightnessChange(event) {
+        var colorSensorLedBrightness = parseInt(event.target.value);
+        this.setState({
+            configuration: {
+                colorSensorGain: this.state.configuration.colorSensorGain,
+                colorSensorLedBrightness: colorSensorLedBrightness
+            }
+        });
+    }
+
     handleDisconnect() {
-        qwest.post('/ble/disconnect', { peripheralId: this.props.params.peripheralId })
+        qwest.post('/ble/disconnect', {peripheralId: this.props.params.peripheralId})
             .then(() => {
                 this.handleDisconnected();
             });
@@ -187,14 +231,38 @@ export default class ConnectedPeripheral extends React.Component {
                     <div className={styles.label}>Motors</div>
                     <div>
                         <div>
-                            Left: <input value={this.state.motor.left} onChange={this.handleMotorLeftChange.bind(this)}/>
+                            Left: <input value={this.state.motor.left}
+                                         onChange={this.handleMotorLeftChange.bind(this)}/>
                         </div>
                         <div>
-                            Right: <input value={this.state.motor.right} onChange={this.handleMotorRightChange.bind(this)}/>
+                            Right: <input value={this.state.motor.right}
+                                          onChange={this.handleMotorRightChange.bind(this)}/>
                         </div>
                         <button onClick={this.onMotorSet.bind(this)}>Set</button>
                         <button onClick={this.refreshMotor.bind(this)}>Refresh</button>
                     </div>
+                </div>
+
+                <div className={styles['column']}>
+                    <div className={styles.label}>Color Sensor Gain</div>
+                    <div>
+                        <select value={this.state.configuration.colorSensorGain} onChange={this.handleColorSensorGainChange.bind(this)}>
+                            <option value="">Not Set</option>
+                            <option value="1">x1</option>
+                            <option value="4">x4</option>
+                            <option value="16">x16</option>
+                            <option value="60">x60</option>
+                        </select>
+                    </div>
+
+                    <div className={styles.label}>Color Sensor LED Brightness</div>
+                    <div>
+                        <input value={this.state.configuration.colorSensorLedBrightness}
+                               onChange={this.handleColorSensorLedBrightnessChange.bind(this)}/>
+                    </div>
+
+                    <button onClick={this.onConfigurationSet.bind(this)}>Set</button>
+                    <button onClick={this.refreshConfiguration.bind(this)}>Refresh</button>
                 </div>
             </div>
         );
