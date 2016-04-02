@@ -17,8 +17,8 @@ function clamp(value, min, max) {
 }
 
 function scaleMotorValue(value) {
-    value = clamp(value, -1.0, 1.0);
-    return value * 100;
+    value = clamp(value, -100.0, 100.0);
+    return value;
 }
 
 export default class BlePeripheral extends EventEmitter {
@@ -141,7 +141,7 @@ export default class BlePeripheral extends EventEmitter {
                 left: data.readInt8(0),
                 right: data.readInt8(1)
             };
-            return callback(null, sensorData);
+            return callback(null, motorData);
         });
     }
 
@@ -166,7 +166,7 @@ export default class BlePeripheral extends EventEmitter {
             console.log('_readCharacteristic:', characteristic.uuid);
             return characteristic.read((err, data) => {
                 this._lock.unlock();
-                console.log('_readCharacteristic release:', characteristic.uuid);
+                console.log('_readCharacteristic release:', characteristic.uuid, data);
                 return callback(err, data);
             });
         });
@@ -175,7 +175,7 @@ export default class BlePeripheral extends EventEmitter {
     _writeCharacteristic(characteristic, data, callback) {
         console.log('_writeCharacteristic waiting for lock:', characteristic.uuid);
         this._lock.timedLock(1000, () => {
-            console.log('_writeCharacteristic:', characteristic.uuid);
+            console.log('_writeCharacteristic:', characteristic.uuid, data);
             return characteristic.write(data, false, (err, data) => {
                 this._lock.unlock();
                 console.log('_writeCharacteristic release:', characteristic.uuid);

@@ -31,7 +31,7 @@
 
 #define RN4020_DEBUG
 #define BLE_UART              huart2
-#define BLE_DEVICE_NAME       "Minirobot"
+#define BLE_DEVICE_NAME       "bot" /* max 6 - 4 (4 digits of MAC) */
 #define BLE_MANUFACTURER_NAME "joeferner"
 #define BLE_MODEL_NUMBER      "1.0"
 #define BLE_SERIAL_NUMBER     "000001"

@@ -20,4 +20,6 @@ void ble_updateLineSensor(LineSensor lineSensor, bool active);
 void ble_updateCompass(uint16_t heading);
 void ble_updateColorSensorData(ColorSensorData* colorData);
 
+extern void onBLESetMotor(int8_t left, int8_t right);
+
 #endif

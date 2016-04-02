@@ -95,6 +95,11 @@ void onLineSensor(LineSensor lineSensor, bool active) {
   ble_updateLineSensor(lineSensor, active);
 }
 
+void onBLESetMotor(int8_t left, int8_t right) {
+  DEBUG_OUT("ble set motor: %d %d\n", left, right);
+  servo_setSpeed(left, right);
+}
+
 void compass_onChange(uint16_t heading) {
   //DEBUG_OUT("heading: %d\n", heading);
   ble_updateCompass(heading);

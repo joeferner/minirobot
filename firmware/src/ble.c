@@ -21,12 +21,14 @@ typedef struct __attribute__((__packed__)) {
   uint8_t colorGreen;
   uint8_t colorBlue;
   uint8_t colorClear;
-} BLE_SensorData;
+}
+BLE_SensorData;
 
 typedef struct __attribute__((__packed__)) {
   int8_t left;
   int8_t right;
-} BLE_MotorData;
+}
+BLE_MotorData;
 
 RN4020 rn4020;
 
@@ -94,44 +96,44 @@ void ble_updateBatteryLevel(uint8_t batteryLevel) {
 }
 
 void ble_updateFeeler(Feeler feeler, bool active) {
-  switch(feeler) {
-    case FEELER_LEFT:
-      _ble_sensorData.feelerLeft = active ? 1 : 0;
-      break;
-    case FEELER_RIGHT:
-      _ble_sensorData.feelerRight = active ? 1 : 0;
-      break;
+  switch (feeler) {
+  case FEELER_LEFT:
+    _ble_sensorData.feelerLeft = active ? 1 : 0;
+    break;
+  case FEELER_RIGHT:
+    _ble_sensorData.feelerRight = active ? 1 : 0;
+    break;
   }
 }
 
 void ble_updateLineSensor(LineSensor lineSensor, bool active) {
-  switch(lineSensor) {
-      case LINE_SENSOR_LEFT_OUT:
-	_ble_sensorData.lineLeftOuter = active ? 1 : 0;
-	break;
-      case LINE_SENSOR_LEFT_IN:
-	_ble_sensorData.lineLeftInner = active ? 1 : 0;
-	break;
-      case LINE_SENSOR_RIGHT_OUT:
-	_ble_sensorData.lineRightOuter = active ? 1 : 0;
-	break;
-      case LINE_SENSOR_RIGHT_IN:
-	_ble_sensorData.lineRightInner = active ? 1 : 0;
-	break;
+  switch (lineSensor) {
+  case LINE_SENSOR_LEFT_OUT:
+    _ble_sensorData.lineLeftOuter = active ? 1 : 0;
+    break;
+  case LINE_SENSOR_LEFT_IN:
+    _ble_sensorData.lineLeftInner = active ? 1 : 0;
+    break;
+  case LINE_SENSOR_RIGHT_OUT:
+    _ble_sensorData.lineRightOuter = active ? 1 : 0;
+    break;
+  case LINE_SENSOR_RIGHT_IN:
+    _ble_sensorData.lineRightInner = active ? 1 : 0;
+    break;
   }
 }
 
 void ble_updateCompass(uint16_t heading) {
   _ble_sensorData.compass = heading;
 }
-  
+
 void ble_updateColorSensorData(ColorSensorData* colorData) {
   _ble_sensorData.colorRed = colorData->r;
   _ble_sensorData.colorGreen = colorData->g;
   _ble_sensorData.colorBlue = colorData->b;
   _ble_sensorData.colorClear = colorData->c;
 }
-  
+
 void RN4020_onRealTimeRead(RN4020* rn4020, uint16_t characteristicHandle) {
   RN4020_handleLookupItem* handleLookupItem = RN4020_lookupHandle(rn4020, characteristicHandle);
   if (handleLookupItem == NULL) {
@@ -189,6 +191,26 @@ void RN4020_onRealTimeRead(RN4020* rn4020, uint16_t characteristicHandle) {
   }
 
   printf("unhandled real time read: ");
+  for (int i = 0; i < handleLookupItem->characteristicUUIDLength; i++) {
+    uint8_t z = handleLookupItem->characteristicUUID[i];
+    printf("%02X", z);
+  }
+  printf("\n");
+}
+
+void RN4020_onWrite(RN4020* rn4020, uint16_t characteristicHandle, uint8_t* data, uint8_t dataLength) {
+  RN4020_handleLookupItem* handleLookupItem = RN4020_lookupHandle(rn4020, characteristicHandle);
+  if (handleLookupItem == NULL) {
+    return;
+  }
+
+  if (RN4020_isHandleLookupItemUUIDEqual128(handleLookupItem, BLE_MINIROBOT_CHARACTERISTIC_MOTORS_UUID)) {
+    BLE_MotorData* motorData = (BLE_MotorData*)data;
+    onBLESetMotor(motorData->left, motorData->right);
+    return;
+  }
+
+  printf("unhandled write: ");
   for (int i = 0; i < handleLookupItem->characteristicUUIDLength; i++) {
     uint8_t z = handleLookupItem->characteristicUUID[i];
     printf("%02X", z);

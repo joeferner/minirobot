@@ -31,9 +31,6 @@ export default class App extends React.Component {
     onWebSocketMessage(message) {
         console.log('socket event', message);
         document.dispatchEvent(new CustomEvent('socketio.message', { detail: message }));
-        if (message.type === 'discover') {
-            this.forceUpdate();
-        }
     }
 
     render() {
