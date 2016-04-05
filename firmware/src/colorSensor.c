@@ -58,22 +58,22 @@ HAL_StatusTypeDef colorSensor_setLedBrightness(uint8_t brightness) {
 
 HAL_StatusTypeDef colorSensor_setGain(uint8_t gain) {
   TCS3472_Gain tcsGain;
-  switch(gain) {
-    case 1:
-      tcsGain = TCS3472_REG_CONTROL_AGAIN_1X;
-      break;
-    case 4:
-      tcsGain = TCS3472_REG_CONTROL_AGAIN_4X;
-      break;
-    case 16:
-      tcsGain = TCS3472_REG_CONTROL_AGAIN_16X;
-      break;
-    case 60:
-      tcsGain = TCS3472_REG_CONTROL_AGAIN_60X;
-      break;
-    default:
-      DEBUG_OUT("invalid gain %d\n", gain);
-      return HAL_ERROR;
+  switch (gain) {
+  case 1:
+    tcsGain = TCS3472_REG_CONTROL_AGAIN_1X;
+    break;
+  case 4:
+    tcsGain = TCS3472_REG_CONTROL_AGAIN_4X;
+    break;
+  case 16:
+    tcsGain = TCS3472_REG_CONTROL_AGAIN_16X;
+    break;
+  case 60:
+    tcsGain = TCS3472_REG_CONTROL_AGAIN_60X;
+    break;
+  default:
+    DEBUG_OUT("invalid gain %d\n", gain);
+    return HAL_ERROR;
   }
   return TCS3472_setGain(&tcs3472, tcsGain);
 }

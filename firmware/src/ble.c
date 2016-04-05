@@ -2,6 +2,7 @@
 #include "ble.h"
 #include <rn4020/rn4020.h>
 #include <utils/utils.h>
+#include <utils/timer.h>
 #include <string.h>
 #include <version.h>
 
@@ -37,6 +38,9 @@ uint8_t _ble_batteryLevel;
 BLE_Configuration _ble_configurationData;
 BLE_SensorData _ble_sensorData;
 BLE_MotorData _ble_motorData;
+bool _ble_sensorDataChanged;
+bool _ble_batteryLevelChanged;
+PeriodicTimer _ble_notifyTimer;
 
 HAL_StatusTypeDef ble_setup() {
   DEBUG_OUT("ble setup\n");
@@ -44,6 +48,9 @@ HAL_StatusTypeDef ble_setup() {
   _ble_batteryLevel = 0;
   _ble_configurationData.colorSensorGain = 0;
   _ble_configurationData.colorSensorLedBrightness = 0;
+  _ble_sensorDataChanged = false;
+  _ble_batteryLevelChanged = false;
+  periodicTimer_setup(&_ble_notifyTimer, 1000);
 
   uint32_t supportedServices = RN4020_SERVICE_DEVICE_INFORMATION
                                | RN4020_SERVICE_BATTERY
@@ -74,7 +81,7 @@ HAL_StatusTypeDef ble_setup() {
   returnNonOKHALStatus(RN4020_addPrivateCharacteristic(
                          &rn4020,
                          BLE_MINIROBOT_CHARACTERISTIC_SENSORS_UUID,
-                         RN4020_PRIVATE_CHARACTERISTIC_PROPERTY_READ,
+                         RN4020_PRIVATE_CHARACTERISTIC_PROPERTY_READ | RN4020_PRIVATE_CHARACTERISTIC_PROPERTY_NOTIFY,
                          sizeof(BLE_SensorData),
                          RN4020_PRIVATE_CHARACTERISTIC_SECURITY_NONE
                        ));
@@ -95,6 +102,20 @@ HAL_StatusTypeDef ble_setup() {
 
 void ble_tick() {
   RN4020_tick(&rn4020);
+
+  if (periodicTimer_hasElapsed(&_ble_notifyTimer)) {
+    if (RN4020_isConnected(&rn4020)) {
+      if (_ble_sensorDataChanged) {
+        _ble_sensorDataChanged = false;
+        RN4020_writeServerPrivateCharacteristic(&rn4020, BLE_MINIROBOT_CHARACTERISTIC_SENSORS_UUID, (const uint8_t*)&_ble_sensorData, sizeof(_ble_sensorData));
+      }
+
+      if (_ble_batteryLevelChanged) {
+        _ble_batteryLevelChanged = false;
+        RN4020_battery_setLevel(&rn4020, _ble_batteryLevel);
+      }
+    }
+  }
 }
 
 bool ble_debugProcessLine(const char* line) {
@@ -103,46 +124,80 @@ bool ble_debugProcessLine(const char* line) {
 }
 
 void ble_updateBatteryLevel(uint8_t batteryLevel) {
-  _ble_batteryLevel = clamp((uint32_t)batteryLevel * RN4020_BATTERY_MAX_LEVEL / BATTERY_MAX_VALUE, 0, RN4020_BATTERY_MAX_LEVEL);
+  uint8_t newBatteryLevel = clamp((uint32_t)batteryLevel * RN4020_BATTERY_MAX_LEVEL / BATTERY_MAX_VALUE, 0, RN4020_BATTERY_MAX_LEVEL);
+  if (newBatteryLevel != _ble_batteryLevel) {
+    _ble_batteryLevel = newBatteryLevel;
+    _ble_batteryLevelChanged = true;
+  }
 }
 
 void ble_updateFeeler(Feeler feeler, bool active) {
+  uint8_t newValue = active ? 1 : 0;
   switch (feeler) {
   case FEELER_LEFT:
-    _ble_sensorData.feelerLeft = active ? 1 : 0;
+    if (_ble_sensorData.feelerLeft != newValue) {
+      _ble_sensorData.feelerLeft = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   case FEELER_RIGHT:
-    _ble_sensorData.feelerRight = active ? 1 : 0;
+    if (_ble_sensorData.feelerRight != newValue) {
+      _ble_sensorData.feelerRight = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   }
 }
 
 void ble_updateLineSensor(LineSensor lineSensor, bool active) {
+  uint8_t newValue = active ? 1 : 0;
   switch (lineSensor) {
   case LINE_SENSOR_LEFT_OUT:
-    _ble_sensorData.lineLeftOuter = active ? 1 : 0;
+    if (_ble_sensorData.lineLeftOuter != newValue) {
+      _ble_sensorData.lineLeftOuter = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   case LINE_SENSOR_LEFT_IN:
-    _ble_sensorData.lineLeftInner = active ? 1 : 0;
+    if (_ble_sensorData.lineLeftInner != newValue) {
+      _ble_sensorData.lineLeftInner = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   case LINE_SENSOR_RIGHT_OUT:
-    _ble_sensorData.lineRightOuter = active ? 1 : 0;
+    if (_ble_sensorData.lineRightOuter != newValue) {
+      _ble_sensorData.lineRightOuter = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   case LINE_SENSOR_RIGHT_IN:
-    _ble_sensorData.lineRightInner = active ? 1 : 0;
+    if (_ble_sensorData.lineRightInner != newValue) {
+      _ble_sensorData.lineRightInner = newValue;
+      _ble_sensorDataChanged = true;
+    }
     break;
   }
 }
 
 void ble_updateCompass(uint16_t heading) {
-  _ble_sensorData.compass = heading;
+  if (_ble_sensorData.compass != heading) {
+    _ble_sensorData.compass = heading;
+    _ble_sensorDataChanged = true;
+  }
 }
 
 void ble_updateColorSensorData(ColorSensorData* colorData) {
-  _ble_sensorData.colorRed = colorData->r;
-  _ble_sensorData.colorGreen = colorData->g;
-  _ble_sensorData.colorBlue = colorData->b;
-  _ble_sensorData.colorClear = colorData->c;
+  if (_ble_sensorData.colorRed != colorData->r
+      || _ble_sensorData.colorGreen != colorData->g
+      || _ble_sensorData.colorBlue != colorData->b
+      || _ble_sensorData.colorClear != colorData->c
+     ) {
+    _ble_sensorData.colorRed = colorData->r;
+    _ble_sensorData.colorGreen = colorData->g;
+    _ble_sensorData.colorBlue = colorData->b;
+    _ble_sensorData.colorClear = colorData->c;
+    _ble_sensorDataChanged = true;
+  }
 }
 
 void ble_updateColorSensorGain(uint8_t colorSensorGain) {

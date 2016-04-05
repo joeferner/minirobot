@@ -49,10 +49,14 @@ export default class BlePeripheral extends EventEmitter {
         characteristics.forEach((characteristic) => {
             if (characteristic.uuid === CHARACTERISTIC_UUID_BATTERY_LEVEL) {
                 this._batteryLevelCharacteristic = characteristic;
+                this._batteryLevelCharacteristic.notify(true);
+                this._batteryLevelCharacteristic.on('data', this._handleBatteryLevelDataEvent.bind(this));
             } else if (characteristic.uuid === CHARACTERISTIC_UUID_MOTORS) {
                 this._motorsCharacteristic = characteristic;
             } else if (characteristic.uuid === CHARACTERISTIC_UUID_SENSORS) {
                 this._sensorsCharacteristic = characteristic;
+                this._sensorsCharacteristic.notify(true);
+                this._sensorsCharacteristic.on('data', this._handleSensorDataEvent.bind(this));
             } else if (characteristic.uuid === CHARACTERISTIC_UUID_CONFIGURATION) {
                 this._configurationCharacteristic = characteristic;
             }
@@ -60,10 +64,39 @@ export default class BlePeripheral extends EventEmitter {
         console.log(peripheral, services, characteristics);
     }
 
+    _handleBatteryLevelDataEvent(data, isNotification) {
+        console.log('battery data', data);
+        try {
+            var batteryData = this._parseBatteryData(data);
+            this.emit('batteryLevelChange', batteryData);
+        } catch (e) {
+            console.error('could not emit battery level change', e);
+        }
+    }
+
+    _handleSensorDataEvent(data, isNotification) {
+        try {
+            var sensorData = this._parseSensorData(data);
+            this.emit('sensorChange', sensorData);
+        } catch (e) {
+            console.error('could not emit sensor change', e);
+        }
+    }
+
     _handleDisconnect() {
         console.log('peripheral disconnected', this._peripheral.id);
         this.emit('disconnect', this._peripheral.id);
+        if (this._batteryLevelCharacteristic) {
+            this._batteryLevelCharacteristic.removeAllListeners('data');
+        }
+        if (this._sensorsCharacteristic) {
+            this._sensorsCharacteristic.removeAllListeners('data');
+        }
         this._peripheral = null; // after a disconnect this object is no longer valid
+        this._batteryLevelCharacteristic = null;
+        this._motorsCharacteristic = null;
+        this._sensorsCharacteristic = null;
+        this._configurationCharacteristic = null;
     }
 
     getBatteryLevel(callback) {
@@ -83,8 +116,17 @@ export default class BlePeripheral extends EventEmitter {
                 return callback(err);
             }
             console.log('battery level characteristic', data);
-            return callback(null, data[0]);
+            try {
+                var batteryData = this._parseBatteryData(data);
+                return callback(null, batteryData);
+            } catch (e) {
+                return callback(e);
+            }
         });
+    }
+
+    _parseBatteryData(data) {
+        return data[0];
     }
 
     getSensors(callback) {
@@ -114,24 +156,35 @@ export default class BlePeripheral extends EventEmitter {
                 return callback(err);
             }
             console.log('sensor characteristic', data);
-            var firstByte = data.readUInt8(0);
-            var sensorData = {
-                lineLeftOuter: (firstByte & 0x01) ? true : false,
-                lineLeftInner: (firstByte & 0x02) ? true : false,
-                lineRightOuter: (firstByte & 0x04) ? true : false,
-                lineRightInner: (firstByte & 0x08) ? true : false,
-                feelerLeft: (firstByte & 0x10) ? true : false,
-                feelerRight: (firstByte & 0x20) ? true : false,
-                compass: data.readUInt16LE(1),
-                color: {
-                    red: data.readUInt16LE(3),
-                    green: data.readUInt16LE(5),
-                    blue: data.readUInt16LE(7),
-                    clear: data.readUInt16LE(9)
-                }
-            };
+            try {
+                var sensorData = this._parseSensorData(data);
+            } catch (e) {
+                return callback(e);
+            }
             return callback(null, sensorData);
         });
+    }
+
+    _parseSensorData(data) {
+        if (data.length != 11) {
+            throw new Error('invalid sensor data received: ' + data);
+        }
+        var firstByte = data.readUInt8(0);
+        return {
+            lineLeftOuter: (firstByte & 0x01) ? true : false,
+            lineLeftInner: (firstByte & 0x02) ? true : false,
+            lineRightOuter: (firstByte & 0x04) ? true : false,
+            lineRightInner: (firstByte & 0x08) ? true : false,
+            feelerLeft: (firstByte & 0x10) ? true : false,
+            feelerRight: (firstByte & 0x20) ? true : false,
+            compass: data.readUInt16LE(1),
+            color: {
+                red: data.readUInt16LE(3),
+                green: data.readUInt16LE(5),
+                blue: data.readUInt16LE(7),
+                clear: data.readUInt16LE(9)
+            }
+        };
     }
 
     getMotors(callback) {
@@ -150,12 +203,23 @@ export default class BlePeripheral extends EventEmitter {
                 return callback(err);
             }
             console.log('motor characteristic', data);
-            var motorData = {
-                left: data.readInt8(0),
-                right: data.readInt8(1)
-            };
-            return callback(null, motorData);
+            try {
+                var motorData = this._parseMotorData(data);
+                return callback(null, motorData);
+            } catch (e) {
+                return callback(e);
+            }
         });
+    }
+
+    _parseMotorData(data) {
+        if (data.length != 2) {
+            throw new Error('invalid motor data received: ' + data);
+        }
+        return {
+            left: data.readInt8(0),
+            right: data.readInt8(1)
+        };
     }
 
     getConfiguration(callback) {
@@ -174,12 +238,20 @@ export default class BlePeripheral extends EventEmitter {
                 return callback(err);
             }
             console.log('configuration characteristic', data);
-            var configuration = {
-                colorSensorGain: data.readUInt8(0),
-                colorSensorLedBrightness: data.readUInt8(1)
-            };
-            return callback(null, configuration);
+            try {
+                var configuration = this._parseConfigurationData(data);
+                return callback(null, configuration);
+            } catch(e) {
+                return callback(e);
+            }
         });
+    }
+
+    _parseConfigurationData(data) {
+        return {
+            colorSensorGain: data.readUInt8(0),
+            colorSensorLedBrightness: data.readUInt8(1)
+        };
     }
 
     setConfiguration(configuration, callback) {
@@ -221,10 +293,15 @@ export default class BlePeripheral extends EventEmitter {
 
     _readCharacteristic(characteristic, callback) {
         console.log('_readCharacteristic waiting for lock:', characteristic.uuid);
-        this._lock.timedLock(1000, () => {
+        this._lock.timedLock(1000, (lockErr) => {
             console.log('_readCharacteristic:', characteristic.uuid);
+            if (lockErr) {
+                console.error("lock error", lockErr);
+            }
             return characteristic.read((err, data) => {
-                this._lock.unlock();
+                if (!lockErr) {
+                    this._lock.unlock();
+                }
                 console.log('_readCharacteristic release:', characteristic.uuid, data);
                 return callback(err, data);
             });
@@ -233,10 +310,15 @@ export default class BlePeripheral extends EventEmitter {
 
     _writeCharacteristic(characteristic, data, callback) {
         console.log('_writeCharacteristic waiting for lock:', characteristic.uuid);
-        this._lock.timedLock(1000, () => {
+        this._lock.timedLock(1000, (lockErr) => {
             console.log('_writeCharacteristic:', characteristic.uuid, data);
+            if (lockErr) {
+                console.error("lock error", lockErr);
+            }
             return characteristic.write(data, false, (err, data) => {
-                this._lock.unlock();
+                if (!lockErr) {
+                    this._lock.unlock();
+                }
                 console.log('_writeCharacteristic release:', characteristic.uuid);
                 return callback(err, data);
             });

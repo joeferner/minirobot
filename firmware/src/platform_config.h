@@ -28,7 +28,7 @@
 #define TCS3472_INTEGRATION_TIME      0xd5 /* 101ms */
 #define TCS3472_INTEGRATION_TIMEMS    101
 
-#define RN4020_DEBUG
+//#define RN4020_DEBUG
 #define BLE_UART              huart2
 #define BLE_DEVICE_NAME       "bot" /* max 6 - 4 (4 digits of MAC) */
 #define BLE_MANUFACTURER_NAME "joeferner"

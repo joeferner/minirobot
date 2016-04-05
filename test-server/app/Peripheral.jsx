@@ -60,8 +60,8 @@ export default class ConnectedPeripheral extends React.Component {
     }
 
     componentWillUnmount() {
-        clearTimeout(this._refreshBatteryTimeout);
-        clearTimeout(this._refreshSensorsTimeout);
+        //clearTimeout(this._refreshBatteryTimeout);
+        //clearTimeout(this._refreshSensorsTimeout);
         document.removeEventListener('socketio.message', this._socketioMessageEventListener);
     }
 
@@ -69,14 +69,29 @@ export default class ConnectedPeripheral extends React.Component {
         var message = e.detail;
         if (message.type === 'disconnect') {
             this.handleDisconnected();
+        } else if (message.type === 'sensorChange') {
+            this._setSensorDataState(message.data);
+        } else if (message.type === 'batteryLevelChange') {
+            this.setState({batteryLevel: message.data});
         }
+    }
+
+    _setSensorDataState(data) {
+        var red = scaleSensorColorTo256(data.color.red, data.color.clear);
+        var green = scaleSensorColorTo256(data.color.green, data.color.clear);
+        var blue = scaleSensorColorTo256(data.color.blue, data.color.clear);
+        data.colorSwatchStyle = {
+            backgroundColor: 'rgb(' + red + ',' + green + ',' + blue + ')'
+        };
+        data.compassRadians = (data.compass - 90) * (3.1415 / 180.0);
+        this.setState({sensorData: data});
     }
 
     refreshBattery() {
         qwest.get('/ble/' + this.props.params.peripheralId + '/batteryLevel')
             .then((xhr, data) => {
                 this.setState({batteryLevel: data.batteryLevel});
-                this._refreshBatteryTimeout = setTimeout(this.refreshBattery.bind(this), BATTERY_REFRESH_INTERVAL);
+                //this._refreshBatteryTimeout = setTimeout(this.refreshBattery.bind(this), BATTERY_REFRESH_INTERVAL);
             });
     }
 
@@ -97,15 +112,8 @@ export default class ConnectedPeripheral extends React.Component {
     refreshSensors() {
         qwest.get('/ble/' + this.props.params.peripheralId + '/sensors')
             .then((xhr, data) => {
-                var red = scaleSensorColorTo256(data.color.red, data.color.clear);
-                var green = scaleSensorColorTo256(data.color.green, data.color.clear);
-                var blue = scaleSensorColorTo256(data.color.blue, data.color.clear);
-                data.colorSwatchStyle = {
-                    backgroundColor: 'rgb(' + red + ',' + green + ',' + blue + ')'
-                };
-                data.compassRadians = (data.compass - 90) * (3.1415 / 180.0);
-                this.setState({'sensorData': data});
-                this._refreshSensorsTimeout = setTimeout(this.refreshSensors.bind(this), SENSORS_REFRESH_INTERVAL);
+                this._setSensorDataState(data);
+                //this._refreshSensorsTimeout = setTimeout(this.refreshSensors.bind(this), SENSORS_REFRESH_INTERVAL);
             });
     }
 

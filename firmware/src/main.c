@@ -36,10 +36,10 @@ void setup() {
 
   colorSensor_setGain(1);
   ble_updateColorSensorGain(1);
-  
+
   colorSensor_setLedBrightness(50);
   ble_updateColorSensorLedBrightness(50);
-  
+
   DEBUG_OUT("setup complete\n");
   _printPrompt();
 }

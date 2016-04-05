@@ -70,6 +70,14 @@ app.post('/ble/connect', function (req, res, next) {
         if (err) {
             return next(err);
         }
+
+        blePeripheral.on('batteryLevelChange', function (data) {
+            io.emit('event', {type: 'batteryLevelChange', data: data});
+        });
+        blePeripheral.on('sensorChange', function (data) {
+            io.emit('event', {type: 'sensorChange', data: data});
+        });
+
         res.send(peripheralToJson(peripheral));
     });
 });
